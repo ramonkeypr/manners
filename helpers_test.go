@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
 	"testing"
 )
 
@@ -92,17 +91,11 @@ func startGenericServer(t *testing.T, server *GracefulServer, statechanged chan 
 		}
 	}
 
-	//server.up = make(chan chan bool))
 	server.up = make(chan net.Listener)
 	exitchan := make(chan error)
 
 	go func() {
-		err := runner()
-		if err != nil {
-			exitchan <- err
-		} else {
-			exitchan <- nil
-		}
+		exitchan <- runner()
 	}()
 
 	// wait for server socket to be bound
@@ -117,12 +110,9 @@ func startGenericServer(t *testing.T, server *GracefulServer, statechanged chan 
 	return l, exitchan
 }
 
-func startServer(t *testing.T, server *GracefulServer, statechanged chan http.ConnState) (l net.Listener, errc chan error) {
-	runner := func() error {
-		return server.ListenAndServe()
-	}
-
-	return startGenericServer(t, server, statechanged, runner)
+func startServer(t *testing.T, server *GracefulServer, statechanged chan http.ConnState) (
+	l net.Listener, errc chan error) {
+	return startGenericServer(t, server, statechanged, server.ListenAndServe)
 }
 
 func startTLSServer(t *testing.T, server *GracefulServer, certFile, keyFile string, statechanged chan http.ConnState) (l net.Listener, errc chan error) {
@@ -131,25 +121,4 @@ func startTLSServer(t *testing.T, server *GracefulServer, certFile, keyFile stri
 	}
 
 	return startGenericServer(t, server, statechanged, runner)
-}
-
-type tempFile struct {
-	*os.File
-}
-
-func newTempFile(content []byte) (*tempFile, error) {
-	f, err := ioutil.TempFile("", "graceful-test")
-	if err != nil {
-		return nil, err
-	}
-
-	f.Write(content)
-	return &tempFile{f}, nil
-}
-
-func (tf *tempFile) Unlink() {
-	if tf.File != nil {
-		os.Remove(tf.Name())
-		tf.File = nil
-	}
 }

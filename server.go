@@ -110,7 +110,7 @@ func NewWithOptions(o Options) *GracefulServer {
 type GracefulServer struct {
 	*http.Server
 	shutdown     chan struct{}
-	wg           waitgroup
+	wg           waitGroup
 	listener     *GracefulListener
 	stateHandler StateHandler
 
