@@ -1,10 +1,10 @@
-package manners
+package test_helpers
 
 import (
 	"sync"
 )
 
-type waitgroup interface {
+type WaitGroup interface {
 	Add(int)
 	Done()
 	Wait()
@@ -14,33 +14,33 @@ type waitgroup interface {
 type testWg struct {
 	sync.Mutex
 	count        int
-	waitCalled   chan int
-	countChanged chan int
+	WaitCalled   chan int
+	CountChanged chan int
 }
 
-func newTestWg() *testWg {
+func NewWaitGroup() *testWg {
 	return &testWg{
-		waitCalled:   make(chan int, 1),
-		countChanged: make(chan int, 1024),
+		WaitCalled:   make(chan int, 1),
+		CountChanged: make(chan int, 1024),
 	}
 }
 
 func (wg *testWg) Add(delta int) {
 	wg.Lock()
 	wg.count++
-	wg.countChanged <- wg.count
+	wg.CountChanged <- wg.count
 	wg.Unlock()
 }
 
 func (wg *testWg) Done() {
 	wg.Lock()
 	wg.count--
-	wg.countChanged <- wg.count
+	wg.CountChanged <- wg.count
 	wg.Unlock()
 }
 
 func (wg *testWg) Wait() {
 	wg.Lock()
-	wg.waitCalled <- wg.count
+	wg.WaitCalled <- wg.count
 	wg.Unlock()
 }
