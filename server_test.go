@@ -1,12 +1,11 @@
 package manners
 
 import (
+	helpers "github.com/mailgun/manners/test_helpers"
 	"net"
 	"net/http"
 	"testing"
 	"time"
-
-	helpers "github.com/mailgun/manners/test_helpers"
 )
 
 type httpInterface interface {
@@ -62,18 +61,6 @@ func TestGracefulness(t *testing.T) {
 	if err := <-exitchan; err != nil {
 		t.Error("Unexpected error during shutdown", err)
 	}
-}
-
-// Tests that starting the server and closing in 2 new, separate goroutines doesnot
-// get flagged by the race detector (need to run 'go test' w/the -race flag)
-func TestRacyClose(t *testing.T) {
-	go func() {
-		ListenAndServe(":9000", nil)
-	}()
-
-	go func() {
-		Close()
-	}()
 }
 
 // Tests that the server begins to shut down when told to and does not accept
@@ -263,28 +250,6 @@ func TestStateTransitionActiveIdleClosed(t *testing.T) {
 		if err := <-exitchan; err != nil {
 			t.Error("Unexpected error during shutdown", err)
 		}
-	}
-}
-
-func TestRoutinesCount(t *testing.T) {
-	var count int
-	server := NewServer()
-
-	count = server.RoutinesCount()
-	if count != 0 {
-		t.Errorf("Expected the routines count to equal 0; actually %d", count)
-	}
-
-	server.StartRoutine()
-	count = server.RoutinesCount()
-	if count != 1 {
-		t.Errorf("Expected the routines count to equal 1; actually %d", count)
-	}
-
-	server.FinishRoutine()
-	count = server.RoutinesCount()
-	if count != 0 {
-		t.Errorf("Expected the routines count to equal 0; actually %d", count)
 	}
 }
 

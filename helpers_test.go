@@ -82,7 +82,7 @@ func startGenericServer(t *testing.T, server *GracefulServer, statechanged chan 
 		// Wrap the ConnState handler with something that will notify
 		// the statechanged channel when a state change happens
 		server.ConnState = func(conn net.Conn, newState http.ConnState) {
-			statechanged <- newState
+			statechanged <- conn.LocalAddr().(*gracefulAddr).gconn.lastHTTPState
 		}
 	}
 
@@ -96,17 +96,17 @@ func startGenericServer(t *testing.T, server *GracefulServer, statechanged chan 
 	// wait for server socket to be bound
 	select {
 	case l = <-server.up:
-		// all good
+	// all good
 
 	case err := <-exitchan:
-		// all bad
+	// all bad
 		t.Fatal("Server failed to start", err)
 	}
 	return l, exitchan
 }
 
 func startServer(t *testing.T, server *GracefulServer, statechanged chan http.ConnState) (
-	l net.Listener, errc chan error) {
+l net.Listener, errc chan error) {
 	return startGenericServer(t, server, statechanged, server.ListenAndServe)
 }
 
